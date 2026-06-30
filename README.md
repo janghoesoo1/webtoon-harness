@@ -1,6 +1,6 @@
 # 🎬 Webtoon Harness — 웹툰 자동 제작 하네스
 
-> 트렌드 조사부터 세로 스크롤 뷰어 완성까지, 웹툰 한 회차를 **AI 에이전트 팀**이 단계별로 만들어내는 Claude Code 하네스.
+> 트렌드 조사부터 세로 스크롤 뷰어 완성까지, 웹툰 한 회차를 **AI 에이전트 팀**이 단계별로 만들어내는 Claude Code / Codex 하네스.
 
 **27개 전문 에이전트**와 **6개 스킬**로 구성되며, 인기 웹툰 트렌드 조사 → 대사 위주·고긴장·매 회차 반전 시나리오 작성 → 캐릭터 레퍼런스 시트 선행 렌더 → 회차당 50+ 패널을 말풍선·한글 대사 **in-image 베이크**로 병렬 렌더 → 생성-검증 루프로 재생성 → 세로 스크롤 뷰어 조립까지 전 과정을 자동화합니다.
 
@@ -36,6 +36,10 @@
     ├── webtoon-panel-breakdown/ # 패널 분해·스타일/일관성 토큰
     ├── webtoon-panel-render/    # codex-image 병렬 렌더
     └── webtoon-assembly/        # 세로 스크롤 조립·검수·패키징
+.codex/
+└── skills/
+    └── webtoon-orchestrator/    # Codex용 실행 어댑터
+AGENTS.md                       # Codex가 먼저 읽는 루트 지침
 ```
 
 ---
@@ -97,11 +101,13 @@ panel_*.png(말풍선 포함) → index.html(오버레이 없음) → qa_report 
 
 ## 🚀 사용 방법
 
-이 저장소는 [Claude Code](https://claude.ai/code) 하네스입니다. `.claude/` 디렉토리를 작업 프로젝트 루트에 두고 Claude Code를 실행하세요.
+이 저장소는 [Claude Code](https://claude.ai/code)와 Codex에서 쓸 수 있는 웹툰 제작 하네스입니다.
+
+### Claude Code에서 사용
 
 ```bash
 # 1) 하네스를 프로젝트에 배치
-git clone https://github.com/revfactory/webtoon-harness.git
+git clone https://github.com/janghoesoo1/webtoon-harness.git
 cp -r webtoon-harness/.claude /path/to/your-project/
 
 # 2) 해당 프로젝트에서 Claude Code 실행 후
@@ -116,9 +122,30 @@ cp -r webtoon-harness/.claude /path/to/your-project/
 
 `webtoon-orchestrator` 스킬이 자동으로 트리거되어 단계별 에이전트 팀을 조율합니다.
 
+### Codex에서 사용
+
+Codex는 루트의 `AGENTS.md`를 먼저 읽습니다. `.claude/` 원본 역할 정의와 `.codex/` 어댑터를 함께 프로젝트 루트에 배치한 뒤 Codex를 실행하세요.
+
+```bash
+# 1) 하네스를 프로젝트에 배치
+git clone https://github.com/janghoesoo1/webtoon-harness.git
+cp -r webtoon-harness/.claude webtoon-harness/.codex webtoon-harness/AGENTS.md /path/to/your-project/
+
+# 2) 해당 프로젝트에서 Codex 실행 후
+```
+
+그다음 Codex 세션에서 같은 자연어 요청을 사용합니다.
+
+- `"트렌드 반영해서 웹툰 1화 만들어줘"` — 전체 파이프라인 실행
+- `"다음 화 만들어"` — 세계관/스타일/연속성 재사용, 새 회차 생성
+- `"이 회차 반전 더 강하게"` — 시나리오 단계부터 영향 범위 재실행
+- `"패널 23번 다시 그려"` — 해당 패널만 재렌더 + 재검증 + 재조립
+
+Codex에서는 Claude Code의 `TeamCreate`/custom agent를 그대로 실행하지 않고, `AGENTS.md`와 `.codex/skills/webtoon-orchestrator/SKILL.md`가 `.claude/agents`·`.claude/skills` 원본 정의를 읽어 같은 산출물 계약으로 단계별 작업을 수행합니다.
+
 ### 요구 사항
 
-- **Claude Code** (에이전트·스킬 실행 환경)
+- **Claude Code 또는 Codex** (에이전트·스킬 실행 환경)
 - **codex CLI** (`codex exec`의 `image_generation` 툴) — 패널 이미지 병렬 렌더. ChatGPT OAuth 인증 필요. codex 전역 동시 세션은 **최대 5개**를 지킵니다.
   - codex CLI 사용 방법은 [`codex-cli` 스킬](https://github.com/revfactory/skills/tree/main/codex-cli)을 참고하세요.
 
